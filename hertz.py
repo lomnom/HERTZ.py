@@ -179,7 +179,10 @@ try: #enclose loop to make keyboardinterrupt shut down led before closing
 			if timeStrobing>=float(length): #check if timeStrobing is more than needed strobe time
 				if debug:
 					log("timeStrobing >= length") #print that timeStrobing >= length if debug mode
-				off() #turn off led
+				if doublePin: #turn off all leds
+					off(pin1)
+				else:
+					off(pin)
 				done() #exit program
 
 		#turn off led and wait
@@ -202,6 +205,10 @@ try: #enclose loop to make keyboardinterrupt shut down led before closing
 			if timeStrobing>=float(length): #check if timeStrobing is more than needed strobe time
 				if debug:
 					log("timeStrobing >= length") #print that timeStrobing >= length if debug mode
+					if doublePin: #turn off all leds
+						off(pin2)
+					else:
+						off(pin)
 				done() #exit program
 #error handling
 except KeyboardInterrupt: #ctrl-c
