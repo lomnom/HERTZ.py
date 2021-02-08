@@ -12,3 +12,5 @@ python hertz.py customDelay [pin] [length] [offDelay] [onDelay] [debug]
 eg. "python hertz.py customDelay 18 10 0.2 1"
 for debug, add "debug" at the end of the command
 for infinite time, put "-1" as the time
+to oscillate between multiple pins, put [pin1,pin2] as the pin
+eg. python hertz.py hertz [18,23] -1 1
