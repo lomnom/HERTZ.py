@@ -13,6 +13,8 @@ if mode=="-help": #help screen
 	print("eg. \"python hertz.py customDelay 18 10 0.2 1\"")
 	print("for debug, add \"debug\" at the end of the command")
 	print("for infinite time, put \"-1\" as the time")
+	print("to oscillate between multiple pins, put [pin1,pin2] as the pin")
+	print("eg. python hertz.py hertz [18,23] -1 1")
 	quit()
 elif mode=="hertz": #python hertz.py hertz [pin] [length] [hertz] [debug]
 	delay=None
@@ -79,15 +81,33 @@ GPIO.setmode(GPIO.BCM) #use BCM pin numbering
 GPIO.setwarnings(debug) #set warnings to on if debug mode, off otherwise
 
 #parse pin to use
-pin=sys.argv[2] #set pin
+try:
+	pin=int(sys.argv[2])
+	doublePin=False
+except:
+	import ast
+	pin=ast.literal_eval(sys.argv[2]) #parse input into list
+	pin1=pin[0] #set pin
+	pin2=pin[1]
+	doublePin=True
+	#log if doublepin
+	if debug:
+		log("doublePin: "+ str(doublePin))
+		log("pin1: "+ str(pin1))
+		log("pin2: "+ str(pin2))
 
 #init pin to use
 try: #check for valueError (invalidpin)
-	GPIO.setup(int(pin),GPIO.OUT) #init used pin
+	if not doublePin: #init single pin if not doublePin
+		GPIO.setup(int(pin),GPIO.OUT) #init used pin
+	else:
+		GPIO.setup(int(pin1),GPIO.OUT)
+		GPIO.setup(int(pin2),GPIO.OUT)
 except:
-	if debug:
-		log("pin \""+str(pin)+"\" is not valid") #log error
-	print("pin \""+str(pin)+"\" is not valid") #inform user
+	if doublePin: #error
+			print("either pin "+str(pin1)+" or pin "+str(pin2)+" is invalid!")
+	else:
+			print("pin \""+str(pin)+"\" is not valid") #log error
 	done()
 
 #print variables if debug
@@ -106,15 +126,15 @@ if debug:
 	log("onWait: "+str(onWait))
 
 #LED control functions
-def on(): #define on function to avoid repeated code
-	GPIO.output(int(pin),GPIO.HIGH) #on
+def on(GPIOused): #define on function to avoid repeated code
+	GPIO.output(int(GPIOused),GPIO.HIGH) #on
 	if debug:
-		log("led on")
+		log("led on pin"+str(GPIOused)+" on")
 
-def off(): #define off function to avoid repeated code
-	GPIO.output(int(pin),GPIO.LOW) #off
+def off(GPIOused): #define off function to avoid repeated code
+	GPIO.output(int(GPIOused),GPIO.LOW) #off
 	if debug:
-		log("led off")
+		log("led on pin"+str(GPIOused)+" off")
 
 #check for infinite time
 if int(length)==-1: 
@@ -139,8 +159,12 @@ try: #enclose loop to make keyboardinterrupt shut down led before closing
 			iteration+=1 #increment iterations
 			log("iteration: "+str(iteration)) #print iterations
 
-		#turn LED on and wait
-		on() #turn LED on
+		#toggle LED and wait
+		if not doublePin:
+			on(pin) #turn LED on\
+		else:
+			on(pin1)
+			off(pin2)
 		time.sleep(onWait) #delay before turning off
 
 		#add time used for strobing in previous half-iteration to counter
@@ -159,7 +183,11 @@ try: #enclose loop to make keyboardinterrupt shut down led before closing
 				done() #exit program
 
 		#turn off led and wait
-		off() #turn off led
+		if not doublePin:
+			off(pin) #turn LED on\
+		else:
+			off(pin1)
+			on(pin2)
 		time.sleep(offWait) #delay before turning on
 
 		#add time used for strobing in previous half-iteration to counter
@@ -179,8 +207,9 @@ try: #enclose loop to make keyboardinterrupt shut down led before closing
 except KeyboardInterrupt: #ctrl-c
 	if debug:
 		log("ctrl-c detected. turning led off and exiting.") #log that ctrl-c detected
-	off()
+	if doublePin: #turn off all leds
+		off(pin1)
+		off(pin2)
+	else:
+		off(pin)
 	done()
-except: #other error.
-	off()
-	print("the provided values are invalid! run \"python hertz.py -help\" to see examples!") #give user suggestions
