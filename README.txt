@@ -1,7 +1,7 @@
 Dependencies:
 RPI.GPIO
 
-Runs on python 2.7
+Runs on python 2.X and 3.X
 
 USAGE:
 python hertz.py hertz [pin] [length] [hertz] [debug]
